@@ -3,6 +3,8 @@ package apiv1
 import (
 	"github.com/gin-gonic/gin"
 	"log"
+
+	"user-service/models"
 )
 
 type VerifyAuthTokenReq struct {
@@ -14,7 +16,14 @@ func VerifyAuthToken(c *gin.Context) {
 	err := c.BindJSON(&params)
 	if err != nil {
 		log.Println(err)
-		c.JSON(400, gin.H{"message": "Bad Request"})
+		c.AbortWithError(400, err)
 		return
+	}
+	user, err := models.VerifyAuthToken(params.Token, "123")
+	if err != nil {
+		log.Panicln(err)
+		c.AbortWithError(401, err)
+	} else {
+		c.JSON(200, gin.H{"id": user.ID})
 	}
 }

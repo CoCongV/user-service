@@ -1,10 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
 
-import "github.com/dgrijalva/jwt-go"
-
-import "log"
+	"github.com/dgrijalva/jwt-go"
+)
 
 type User struct {
 	ID     uint   `gorm:"primary_key"`
@@ -32,19 +32,16 @@ func (u *User) GenerateAuthToken(secretKey string, expiresAt int64) (string, err
 	return token.SignedString(secretKey)
 }
 
-func (u *User) VerifyAuthToken(tokenString, secretKey string) bool {
+func VerifyAuthToken(tokenString, secretKey string) (User, error) {
 	var claims CustomClaims
 	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		log.Println(err)
-		return false
+		return User{}, err
 	}
 
-	if u.ID == claims.ID {
-		return true
-	} else {
-		return false
-	}
+	var user User
+	DB.First(&user, claims.ID)
+	return user, nil
 }
