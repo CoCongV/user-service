@@ -51,6 +51,7 @@ func main() {
 func runserver(c *cli.Context) error {
 
 	conf := config.ReadConfig(confPath)
+	config.Conf = conf
 
 	models.DB = models.InitDB(conf.DBURL)
 	defer models.DB.Close()

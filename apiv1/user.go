@@ -1,29 +1,47 @@
 package apiv1
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
-
+	"net/http"
 	"user-service/models"
+
+	"github.com/gin-gonic/gin"
 )
 
-type VerifyAuthTokenReq struct {
-	Token string `json:"token" binding:"required"`
+type RegisterUserParams struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
-func VerifyAuthToken(c *gin.Context) {
-	var params VerifyAuthTokenReq
+func RegisterUser(c *gin.Context) {
+	var params RegisterUserParams
 	err := c.BindJSON(&params)
 	if err != nil {
 		log.Println(err)
-		c.AbortWithError(400, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	user, err := models.VerifyAuthToken(params.Token, "123")
-	if err != nil {
-		log.Panicln(err)
-		c.AbortWithError(401, err)
-	} else {
-		c.JSON(200, gin.H{"id": user.ID})
+
+	var user models.User
+
+	models.DB.Where("name = ?", params.Username).First(&user)
+	if user != (models.User{}) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Username Exists"})
 	}
+	models.DB.Where("email = ?", params.Email).First(&user)
+	if user != (models.User{}) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Email Exists"})
+	}
+
+	user = models.User{
+		Name:  params.Username,
+		Email: params.Email,
+	}
+	user.Password([]byte(params.Password))
+	db := models.DB.Create(&user)
+	if db.Error != nil {
+		c.JSON(http.StatusInternalServerError, db.Error)
+	}
+	c.JSON(http.StatusCreated, gin.H{"message": "Success"})
 }

@@ -8,18 +8,20 @@ import (
 
 //Config struct
 type Config struct {
-	Addr  string `toml:"addr"`
-	DBURL string `toml:"dbURL"`
+	Addr      string `toml:"addr"`
+	DBURL     string `toml:"dbURL"`
+	SecretKey string `toml:"secret_key"`
+	ExpiresAt int64  `toml:"expires_at"`
 }
+
+var Conf *Config
 
 //ReadConfig is read toml config file
 func ReadConfig(filePath string) *Config {
-	var config Config
-
-	_, err := toml.DecodeFile(filePath, &config)
+	_, err := toml.DecodeFile(filePath, &Conf)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return &config
+	return Conf
 }
