@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"user-service/apiv1"
+	"user-service/config"
 	"user-service/models"
 	"user-service/server"
 
@@ -24,18 +26,21 @@ type TestSuit struct {
 }
 
 //SetupTest init test suit
-func (suit *TestSuit) SetupTest() {
+func (suit *TestSuit) SetupSuite() {
 	suit.server = server.CreateServ()
 	apiv1.SetRouter(suit.server)
 	models.DB = models.InitDB("host=127.0.0.1 port=5432 user=cong dbname=userservice password=password sslmode=disable")
-	suit.w = httptest.NewRecorder()
+	config.Conf = &config.Config{SecretKey: "f3efef74-c99f-4224-9491-2f347d5318b5"}
+	log.Println("set up test")
 }
 
 func (suit *TestSuit) TearDownSuite() {
 	models.DB.Unscoped().Where("name = ?", "test1").Delete(models.User{})
+	log.Println("teardown")
 }
 
 func (suit *TestSuit) TestUser() {
+	w := httptest.NewRecorder()
 	params := apiv1.RegisterUserParams{
 		Username: "test1",
 		Email:    "test1@test.com",
@@ -47,8 +52,39 @@ func (suit *TestSuit) TestUser() {
 	}
 
 	req, _ := http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(paramsBytes))
-	suit.server.ServeHTTP(suit.w, req)
-	assert.Equal(suit.T(), 201, suit.w.Code)
+	suit.server.ServeHTTP(w, req)
+	assert.Equal(suit.T(), 201, w.Code)
+}
+
+func (suit *TestSuit) TestToken() {
+	w := httptest.NewRecorder()
+	params := apiv1.GenerateAuthTokenParams{
+		Username: "test1",
+		Password: "password",
+	}
+	paramsBytes, err := json.Marshal(params)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req, _ := http.NewRequest("POST", "/api/v1/generate_auth_token", bytes.NewBuffer(paramsBytes))
+	suit.server.ServeHTTP(w, req)
+	assert.Equal(suit.T(), 200, w.Code)
+	resp := w.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var result struct {
+		Token string `json:"token"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Println(result)
+
+	req, _ = http.NewRequest("GET", "/api/v1/verify_auth_token", nil)
+	req.Header.Set("Authorization", result.Token)
+	suit.server.ServeHTTP(w, req)
+	assert.Equal(suit.T(), 200, w.Code)
 }
 
 func TestUserTestSuit(t *testing.T) {

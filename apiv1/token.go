@@ -9,21 +9,16 @@ import (
 	"user-service/models"
 )
 
-type VerifyAuthTokenParams struct {
-	Token string `json:"token" binding:"required"`
-}
-
 func VerifyAuthToken(c *gin.Context) {
-	var params VerifyAuthTokenParams
-	err := c.BindJSON(&params)
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"message": "Unauthorized",
+		})
+	}
+	user, err := models.VerifyAuthToken(token, config.Conf.SecretKey)
 	if err != nil {
 		log.Println(err)
-		c.AbortWithError(400, err)
-		return
-	}
-	user, err := models.VerifyAuthToken(params.Token, config.Conf.SecretKey)
-	if err != nil {
-		log.Panicln(err)
 		c.AbortWithError(401, err)
 	} else {
 		c.JSON(200, gin.H{"id": user.ID})

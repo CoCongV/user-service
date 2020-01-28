@@ -34,13 +34,13 @@ func (u *User) GenerateAuthToken(secretKey string, expiresAt int64) (string, err
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(secretKey)
+	return token.SignedString([]byte(secretKey))
 }
 
 //VerifyAuthToken verify login token
 func VerifyAuthToken(tokenString, secretKey string) (User, error) {
 	var claims CustomClaims
-	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	_, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
