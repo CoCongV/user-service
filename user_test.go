@@ -79,8 +79,6 @@ func (suit *TestSuit) TestToken() {
 		log.Fatalln(err)
 	}
 
-	log.Println(result)
-
 	req, _ = http.NewRequest("GET", "/api/v1/verify_auth_token", nil)
 	req.Header.Set("Authorization", result.Token)
 	suit.server.ServeHTTP(w, req)

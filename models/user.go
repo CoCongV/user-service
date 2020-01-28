@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//User is model
 type User struct {
 	ID           uint   `gorm:"primary_key"`
 	Name         string `gorm:"unique_index;not null;type:varchar(32)"`
@@ -17,6 +18,7 @@ type User struct {
 	passwordHash string `gorm:"type:varchar(256);not null"`
 }
 
+//CustomClaims is custom jwt claims
 type CustomClaims struct {
 	ID uint `json:"id"`
 	jwt.StandardClaims
@@ -26,6 +28,7 @@ func (u User) String() string {
 	return fmt.Sprintf("User<%d %s>", u.ID, u.Name)
 }
 
+//GenerateAuthToken is ...
 func (u *User) GenerateAuthToken(secretKey string, expiresAt int64) (string, error) {
 	claims := CustomClaims{
 		u.ID,
