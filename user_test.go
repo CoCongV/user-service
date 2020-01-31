@@ -82,6 +82,15 @@ func (suit *TestSuit) TestToken() {
 	assert.Equal(suit.T(), 200, w.Code)
 }
 
+func (suit *TestSuit) TestUnauth() {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/verify_auth_token", nil)
+	req.Header.Set("Authorization", "testest")
+	suit.server.ServeHTTP(w, req)
+	assert.Equal(suit.T(), 401, w.Code)
+
+}
+
 func TestUserTestSuit(t *testing.T) {
 	suite.Run(t, new(TestSuit))
 }
