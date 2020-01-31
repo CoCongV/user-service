@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"testing"
 	"user-service/apiv1"
-	"user-service/config"
 	"user-service/models"
 	"user-service/server"
 
@@ -29,8 +28,6 @@ type TestSuit struct {
 func (suit *TestSuit) SetupSuite() {
 	suit.server = server.CreateServ()
 	apiv1.SetRouter(suit.server)
-	models.DB = models.InitDB("host=127.0.0.1 port=5432 user=cong dbname=userservice password=password sslmode=disable")
-	config.Conf = &config.Config{SecretKey: "f3efef74-c99f-4224-9491-2f347d5318b5"}
 	log.Println("set up test")
 }
 
