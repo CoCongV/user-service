@@ -1,7 +1,6 @@
 package apihandlers
 
 import (
-	"net/http"
 	"user-service/config"
 	"user-service/models"
 
@@ -15,9 +14,8 @@ import (
 func AuthHandler(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"message": "Unauthorized",
-		})
+		c.AbortWithStatus(401)
+		return
 	}
 	user, err := models.VerifyAuthToken(token, config.Conf.SecretKey)
 	if err != nil {
