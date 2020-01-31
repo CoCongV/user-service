@@ -14,14 +14,14 @@ type Config struct {
 	ExpiresAt int64  `toml:"expires_at"`
 }
 
+//Conf is struct Config point
 var Conf *Config
 
-//ReadConfig is read toml config file
-func ReadConfig(filePath string) *Config {
-	_, err := toml.DecodeFile(filePath, &Conf)
+//Setup is read toml config file for init
+func Setup() {
+	filepath := "./config.toml"
+	_, err := toml.DecodeFile(filepath, &Conf)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	return Conf
 }
