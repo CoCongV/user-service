@@ -1,17 +1,17 @@
-package apiHandlers
+package apihandlers
 
 import (
-	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"user-service/config"
 	"user-service/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 //APIFunc is ...
 // type APIFunc func(*gin.Context)
 
-//APIAuthHandler is auth decorator
+//AuthHandler is auth decorator
 func AuthHandler(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
@@ -21,7 +21,6 @@ func AuthHandler(c *gin.Context) {
 	}
 	user, err := models.VerifyAuthToken(token, config.Conf.SecretKey)
 	if err != nil {
-		log.Println(err)
 		c.AbortWithError(401, err)
 	} else {
 		c.Set("User", user)
