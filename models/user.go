@@ -15,7 +15,7 @@ type User struct {
 	Email        string `gorm:"unique_index;type:varchar(64)"`
 	Avatar       string `gorm:"not null;size:255"`
 	Verify       string `gorm:"type:BOOLEAN;default:false"`
-	passwordHash string `gorm:"type:varchar(256);not null"`
+	PasswordHash string `gorm:"type:varchar(256);not null"`
 }
 
 //CustomClaims is custom jwt claims
@@ -62,6 +62,15 @@ func (u *User) Password(password []byte) error {
 		log.Println(err)
 		return err
 	}
-	u.passwordHash = string(hash)
+	u.PasswordHash = string(hash)
 	return nil
+}
+
+//VerifyPassword is ...
+func (u *User) VerifyPassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
+	if err != nil {
+		return false
+	}
+	return true
 }

@@ -28,12 +28,11 @@ type TestSuit struct {
 func (suit *TestSuit) SetupSuite() {
 	suit.server = server.CreateServ()
 	apiv1.SetRouter(suit.server)
-	log.Println("set up test")
+	createUser()
 }
 
 func (suit *TestSuit) TearDownSuite() {
-	models.DB.Unscoped().Where("name = ?", "test1").Delete(models.User{})
-	log.Println("teardown")
+	delUser()
 }
 
 func (suit *TestSuit) TestUser() {
@@ -56,7 +55,7 @@ func (suit *TestSuit) TestUser() {
 func (suit *TestSuit) TestToken() {
 	w := httptest.NewRecorder()
 	params := apiv1.GenerateAuthTokenParams{
-		Username: "test1",
+		Username: "test",
 		Password: "password",
 	}
 	paramsBytes, err := json.Marshal(params)
@@ -89,8 +88,49 @@ func (suit *TestSuit) TestUnauth() {
 	suit.server.ServeHTTP(w, req)
 	assert.Equal(suit.T(), 401, w.Code)
 
+	req, _ = http.NewRequest("GET", "/api/v1/verify_auth_token", nil)
+	suit.server.ServeHTTP(w, req)
+	assert.Equal(suit.T(), 401, w.Code)
+
+}
+
+func (suit *TestSuit) TestBadReq() {
+	w := httptest.NewRecorder()
+	params := make(map[string]string)
+	params["username"] = "test1"
+	paramsBytes, err := json.Marshal(params)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req, _ := http.NewRequest("POST", "/api/v1/generate_auth_token", bytes.NewBuffer(paramsBytes))
+	suit.server.ServeHTTP(w, req)
+	assert.Equal(suit.T(), 400, w.Code)
+}
+
+func (suit *TestSuit) TestUserModel() {
+	var user models.User
+	models.DB.Where("name = ?", "test").First(&user)
+	assert.Equal(suit.T(), "test", user.Name)
+	assert.Equal(suit.T(), "test@test.com", user.Email)
+	assert.Equal(suit.T(), true, user.VerifyPassword("password"))
 }
 
 func TestUserTestSuit(t *testing.T) {
 	suite.Run(t, new(TestSuit))
+}
+
+func createUser() {
+	user := models.User{
+		Name:  "test",
+		Email: "test@test.com",
+	}
+	user.Password([]byte("password"))
+	models.DB.Create(&user)
+}
+
+func delUser() {
+	var user models.User
+	models.DB.Where("name = ?", "test").First(&user)
+	models.DB.Delete(&user)
+	models.DB.Unscoped().Where("name = ?", "test1").Delete(models.User{})
 }

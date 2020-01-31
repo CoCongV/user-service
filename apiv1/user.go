@@ -1,7 +1,6 @@
 package apiv1
 
 import (
-	"log"
 	"net/http"
 	"user-service/models"
 
@@ -18,7 +17,6 @@ func RegisterUser(c *gin.Context) {
 	var params RegisterUserParams
 	err := c.BindJSON(&params)
 	if err != nil {
-		log.Println(err)
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}

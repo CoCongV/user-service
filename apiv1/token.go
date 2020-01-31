@@ -1,21 +1,17 @@
 package apiv1
 
 import (
-	"github.com/gin-gonic/gin"
-	"log"
+	"fmt"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"user-service/config"
 	"user-service/models"
 )
 
 func VerifyAuthToken(c *gin.Context) {
-	userInterface, ok := c.Get("User")
-	if ok != true {
-		log.Println("gin Context get user fail")
-		c.AbortWithStatus(500)
-		return
-	}
+	userInterface, _ := c.Get("User")
 
 	user := userInterface.(*models.User)
 	c.JSON(http.StatusOK, gin.H{
@@ -33,8 +29,14 @@ func GenerateAuthToken(c *gin.Context) {
 	var params GenerateAuthTokenParams
 	err := c.BindJSON(&params)
 	if err != nil {
-		log.Println(&params)
-		c.AbortWithError(http.StatusUnauthorized, err)
+		fmt.Fprintln(gin.DefaultWriter, params)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	if params.Password == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid password",
+		})
 		return
 	}
 
@@ -44,8 +46,16 @@ func GenerateAuthToken(c *gin.Context) {
 	} else if params.Email != "" {
 		models.DB.Where("name = ?", params.Email).First(&user)
 	} else {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Wrong User name or Password"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Invalid username/password"})
+		return
 	}
+	if ok := user.VerifyPassword(params.Password); ok != true {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"message": "Invalid username/password",
+		})
+		return
+	}
+
 	token, err := user.GenerateAuthToken(config.Conf.SecretKey, config.Conf.ExpiresAt)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
