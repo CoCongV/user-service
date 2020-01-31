@@ -33,17 +33,11 @@ func main() {
 				Name:   "runserver",
 				Usage:  "run server",
 				Action: runserver,
-				// Flags: []cli.Flag{
-				// 	confFlag,
-				// },
 			},
 			{
 				Name:   "migrate",
 				Usage:  "migrate models",
 				Action: migrate,
-				// Flags: []cli.Flag{
-				// 	confFlag,
-				// },
 			},
 		},
 	}
@@ -54,12 +48,6 @@ func main() {
 }
 
 func runserver(c *cli.Context) error {
-
-	// conf := config.ReadConfig(confPath)
-	// config.Conf = conf
-
-	// models.DB = models.InitDB(conf.DBURL)
-	// defer models.DB.Close()
 
 	defer models.DB.Close()
 
