@@ -10,19 +10,30 @@ import (
 )
 
 func VerifyAuthToken(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"message": "Unauthorized",
-		})
+	userInterface, ok := c.Get("User")
+	if ok != true {
+		log.Println("gin Context get user fail")
+		c.AbortWithStatus(500)
+		return
 	}
-	user, err := models.VerifyAuthToken(token, config.Conf.SecretKey)
-	if err != nil {
-		log.Println(err)
-		c.AbortWithError(401, err)
-	} else {
-		c.JSON(200, gin.H{"id": user.ID})
-	}
+
+	user := userInterface.(models.User)
+	c.JSON(http.StatusOK, gin.H{
+		"id": user.ID,
+	})
+	// token := c.GetHeader("Authorization")
+	// if token == "" {
+	// 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+	// 		"message": "Unauthorized",
+	// 	})
+	// }
+	// user, err := models.VerifyAuthToken(token, config.Conf.SecretKey)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	c.AbortWithError(401, err)
+	// } else {
+	// 	c.JSON(200, gin.H{"id": user.ID})
+	// }
 }
 
 type GenerateAuthTokenParams struct {
