@@ -17,23 +17,10 @@ func VerifyAuthToken(c *gin.Context) {
 		return
 	}
 
-	user := userInterface.(models.User)
+	user := userInterface.(*models.User)
 	c.JSON(http.StatusOK, gin.H{
 		"id": user.ID,
 	})
-	// token := c.GetHeader("Authorization")
-	// if token == "" {
-	// 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-	// 		"message": "Unauthorized",
-	// 	})
-	// }
-	// user, err := models.VerifyAuthToken(token, config.Conf.SecretKey)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	c.AbortWithError(401, err)
-	// } else {
-	// 	c.JSON(200, gin.H{"id": user.ID})
-	// }
 }
 
 type GenerateAuthTokenParams struct {

@@ -41,18 +41,18 @@ func (u *User) GenerateAuthToken(secretKey string, expiresAt int64) (string, err
 }
 
 //VerifyAuthToken verify login token
-func VerifyAuthToken(tokenString, secretKey string) (User, error) {
+func VerifyAuthToken(tokenString, secretKey string) (*User, error) {
 	var claims CustomClaims
 	_, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		return User{}, err
+		return &User{}, err
 	}
 
 	var user User
 	DB.First(&user, claims.ID)
-	return user, nil
+	return &user, nil
 }
 
 //Password hash password and store
