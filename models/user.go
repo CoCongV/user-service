@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -59,7 +58,6 @@ func VerifyAuthToken(tokenString, secretKey string) (*User, error) {
 func (u *User) Password(password []byte) error {
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	u.PasswordHash = string(hash)
