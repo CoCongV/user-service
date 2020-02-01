@@ -1,3 +1,4 @@
 dbURL = "host=127.0.0.1 port=5432 user=cong dbname=userservice password=password sslmode=disable"
-addr = "localhost:8080"
+addr = ":8080"
 secret_key = "f3efef74-c99f-4224-9491-2f347d5318b5"
+mode = "release"

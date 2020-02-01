@@ -6,5 +6,5 @@ import (
 
 //CreateServ return gin engine
 func CreateServ() *gin.Engine {
-	return gin.Default()
+	return gin.New()
 }

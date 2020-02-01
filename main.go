@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/urfave/cli/v2"
 
@@ -52,6 +53,9 @@ func runserver(c *cli.Context) error {
 	defer models.DB.Close()
 
 	r := server.CreateServ()
+
+	r.Use(gin.Recovery())
+
 	apiv1.SetRouter(r)
 	r.Run(config.Conf.Addr)
 	return nil

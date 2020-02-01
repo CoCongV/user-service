@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/BurntSushi/toml"
+	"github.com/gin-gonic/gin"
 )
 
 //Config struct
@@ -12,6 +13,7 @@ type Config struct {
 	DBURL     string `toml:"dbURL"`
 	SecretKey string `toml:"secret_key"`
 	ExpiresAt int64  `toml:"expires_at"`
+	Mode      string `toml:"mode"`
 }
 
 //Conf is struct Config point
@@ -23,5 +25,8 @@ func Setup() {
 	_, err := toml.DecodeFile(filepath, &Conf)
 	if err != nil {
 		log.Fatal(err)
+	}
+	if Conf.Mode == "release" {
+		gin.SetMode(gin.ReleaseMode)
 	}
 }
