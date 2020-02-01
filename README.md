@@ -1,5 +1,5 @@
 # user-service
 
-[x] register user
-[x] generate user auth token
-[x] verify auth token
+1. [x] register user
+1. [x] generate/verify user auth token
+1. [ ] generate/verify user email token
