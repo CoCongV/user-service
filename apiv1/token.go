@@ -44,7 +44,7 @@ func GenerateAuthToken(c *gin.Context) {
 	if params.Username != "" {
 		models.DB.Where("name = ?", params.Username).First(&user)
 	} else if params.Email != "" {
-		models.DB.Where("name = ?", params.Email).First(&user)
+		models.DB.Where("email = ?", params.Email).First(&user)
 	} else {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Invalid username/password"})
 		return

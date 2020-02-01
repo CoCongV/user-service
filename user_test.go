@@ -53,7 +53,9 @@ func (suit *TestSuit) TestUser() {
 }
 
 func (suit *TestSuit) TestToken() {
-	w := httptest.NewRecorder()
+	var w *httptest.ResponseRecorder
+
+	w = httptest.NewRecorder()
 	params := apiv1.GenerateAuthTokenParams{
 		Username: "test",
 		Password: "password",
@@ -67,7 +69,6 @@ func (suit *TestSuit) TestToken() {
 	assert.Equal(suit.T(), 200, w.Code)
 	resp := w.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
-
 	var result struct {
 		Token string `json:"token"`
 	}
@@ -75,6 +76,20 @@ func (suit *TestSuit) TestToken() {
 		log.Fatalln(err)
 	}
 
+	w = httptest.NewRecorder()
+	params = apiv1.GenerateAuthTokenParams{
+		Email:    "test@test.com",
+		Password: "password",
+	}
+	paramsBytes, err = json.Marshal(params)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req, _ = http.NewRequest("POST", "/api/v1/generate_auth_token", bytes.NewBuffer(paramsBytes))
+	suit.server.ServeHTTP(w, req)
+	assert.Equal(suit.T(), 200, w.Code)
+
+	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("GET", "/api/v1/verify_auth_token", nil)
 	req.Header.Set("Authorization", result.Token)
 	suit.server.ServeHTTP(w, req)
@@ -95,7 +110,8 @@ func (suit *TestSuit) TestUnauth() {
 }
 
 func (suit *TestSuit) TestBadReq() {
-	w := httptest.NewRecorder()
+	var w *httptest.ResponseRecorder
+	w = httptest.NewRecorder()
 	params := make(map[string]string)
 	params["username"] = "test1"
 	paramsBytes, err := json.Marshal(params)
@@ -103,6 +119,11 @@ func (suit *TestSuit) TestBadReq() {
 		log.Fatal(err)
 	}
 	req, _ := http.NewRequest("POST", "/api/v1/generate_auth_token", bytes.NewBuffer(paramsBytes))
+	suit.server.ServeHTTP(w, req)
+	assert.Equal(suit.T(), 400, w.Code)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", "/api/v1/generate_auth_token", nil)
 	suit.server.ServeHTTP(w, req)
 	assert.Equal(suit.T(), 400, w.Code)
 }
