@@ -4,7 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/gin-gonic/gin"
+	"net/http"
+	_ "net/http/pprof"
+
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/urfave/cli/v2"
 
@@ -49,12 +51,13 @@ func main() {
 }
 
 func runserver(c *cli.Context) error {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	defer models.DB.Close()
 
 	r := server.CreateServ()
-
-	r.Use(gin.Recovery())
 
 	apiv1.SetRouter(r)
 	r.Run(config.Conf.Addr)
