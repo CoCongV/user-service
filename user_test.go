@@ -35,7 +35,7 @@ func (suit *TestSuit) SetupSuite() {
 }
 
 func (suit *TestSuit) TearDownSuite() {
-	delUser()
+	// delUser()
 }
 
 func (suit *TestSuit) TestUser() {
@@ -92,7 +92,7 @@ func (suit *TestSuit) TestToken() {
 
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("GET", "/api/v1/verify_auth_token", nil)
-	req.Header.Set("Authorization", result.Token)
+	req.Header.Set("Authorization", "bearer "+result.Token)
 	suit.server.ServeHTTP(w, req)
 	assert.Equal(suit.T(), 200, w.Code)
 }
@@ -201,10 +201,7 @@ func createUser() {
 }
 
 func delUser() {
-	var user models.User
-	models.DB.Where("name = ?", "test").First(&user)
-	models.DB.Delete(&user)
-	models.DB.Unscoped().Where("name = ?", "test1").Delete(models.User{})
+	models.DB.Unscoped().Delete(&models.User{})
 }
 
 func createReqBody(params interface{}) io.Reader {

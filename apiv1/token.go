@@ -1,7 +1,6 @@
 package apiv1
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +28,6 @@ func GenerateAuthToken(c *gin.Context) {
 	var params GenerateAuthTokenParams
 	err := c.BindJSON(&params)
 	if err != nil {
-		fmt.Fprintln(gin.DefaultWriter, params)
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}

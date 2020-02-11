@@ -7,6 +7,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	UPLOAD = 8
+	ADMIN  = 16
+)
+
 //User is model
 type User struct {
 	ID           uint   `gorm:"primary_key"`
@@ -15,6 +20,7 @@ type User struct {
 	Avatar       string `gorm:"not null;size:255"`
 	Verify       string `gorm:"type:BOOLEAN;default:false"`
 	PasswordHash string `gorm:"type:varchar(256);not null"`
+	Role         uint   `gorm:"not null"`
 }
 
 //CustomClaims is custom jwt claims
