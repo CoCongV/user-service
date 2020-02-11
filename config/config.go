@@ -9,11 +9,14 @@ import (
 
 //Config struct
 type Config struct {
-	Addr      string `toml:"addr"`
-	DBURL     string `toml:"dbURL"`
-	SecretKey string `toml:"secret_key"`
-	ExpiresAt int64  `toml:"expires_at"`
-	Mode      string `toml:"mode"`
+	Addr        string `toml:"addr"`
+	DBURL       string `toml:"dbURL"`
+	SecretKey   string `toml:"secret_key"`
+	ExpiresAt   int64  `toml:"expires_at"`
+	Mode        string `toml:"mode"`
+	AdminUser   string `toml:"admin_user"`
+	AdminPasswd string `toml:"admin_passwd"`
+	AdminEmail  string `toml:"admin_email"`
 }
 
 //Conf is struct Config point

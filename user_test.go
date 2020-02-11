@@ -35,7 +35,7 @@ func (suit *TestSuit) SetupSuite() {
 }
 
 func (suit *TestSuit) TearDownSuite() {
-	// delUser()
+	delUser()
 }
 
 func (suit *TestSuit) TestUser() {

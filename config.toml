@@ -2,3 +2,6 @@ dbURL = "host=127.0.0.1 port=5432 user=cong dbname=userservice password=password
 addr = ":8001"
 secret_key = "f3efef74-c99f-4224-9491-2f347d5318b5"
 mode = "debug"
+admin_user = "admin"
+admin_email = "admin@test.com"
+admin_passwd = "password"

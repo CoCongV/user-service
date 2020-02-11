@@ -42,6 +42,11 @@ func main() {
 				Usage:  "migrate models",
 				Action: migrate,
 			},
+			{
+				Name:   "init",
+				Usage:  "migrate and create admin user",
+				Action: initServer,
+			},
 		},
 	}
 	err := app.Run(os.Args)
@@ -67,5 +72,16 @@ func runserver(c *cli.Context) error {
 func migrate(c *cli.Context) error {
 	models.DB.AutoMigrate(&models.User{})
 
+	return nil
+}
+
+func initServer(c *cli.Context) error {
+	migrate(c)
+	user := models.User{
+		Name:  config.Conf.AdminUser,
+		Email: config.Conf.AdminEmail,
+	}
+	user.Password([]byte(config.Conf.AdminPasswd))
+	models.DB.Create(&user)
 	return nil
 }
