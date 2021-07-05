@@ -1,4 +1,7 @@
+extern crate bcrypt;
+
 use actix_web::web;
+use bcrypt::{DEFAULT_COST, hash, verify, BcryptResult};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -15,16 +18,27 @@ pub struct User {
     pub role: i32,
 }
 
-pub fn login(
-    userinfo: web::Json<interface::Info>,
+impl User {
+    pub fn verify_password(&self, password: &String) -> bool {
+        if let Ok(valid) = verify(&self.password_hash, password) {
+            valid
+        } else {
+            false
+        }
+    }
+}
+
+pub fn query_user(
+    userinfo: &web::Json<interface::Info>,
     conn: &PgConnection,
 ) -> Result<Option<User>, diesel::result::Error> {
     use crate::models::schema::users::dsl::*;
 
     let user = users
-        .filter(name.eq(&name))
+        .filter(name.eq(&userinfo.username))
         .first(conn)
         .optional()?;
 
     Ok(user)
 }
+
