@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use actix_web::{post, web, Error, HttpResponse};
 
 use crate::db;
@@ -10,8 +12,9 @@ pub async fn generate_auth_token(
     info: web::Json<interface::Info>,
 ) -> Result<HttpResponse, Error> {
     let conn = pool.get().expect("couldn't get db connection from pool");
+    let info_a = Arc::new(info);
 
-    let user = web::block( move || models::user::query_user(&info, &conn))
+    let user = web::block( move || models::user::query_user(Arc::clone(&info_a), &conn))
         .await
         .map_err(|e| {
             eprintln!("{}", e);
@@ -19,7 +22,7 @@ pub async fn generate_auth_token(
         })?;
 
     if let Some(user) = user {
-        if user.verify_password(info.password) {
+        if user.verify_password(&Arc::clone(&info_a).password) {
             Ok(HttpResponse::Ok().json(user))
         } else {
             let res = HttpResponse::Unauthorized().body(format!("password Error"));
