@@ -17,7 +17,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new().data(pool.clone())
         .wrap(middleware::Logger::default())
-        .service(api::user::generate_auth_token)
+        .service(api::token::generate_auth_token)
     })
     .bind("0.0.0.0:8001")?
     .run()

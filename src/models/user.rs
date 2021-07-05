@@ -1,14 +1,16 @@
 extern crate bcrypt;
 
 use actix_web::web;
+use actix_web::error::{Error, InternalError};
 use bcrypt::{DEFAULT_COST, hash, verify, BcryptResult};
 use diesel::prelude::*;
 use jsonwebtoken::{encode, decode, Header, EncodingKey};
 use serde::{Deserialize, Serialize};
 
 use crate::interface;
+use crate::models::schema::users;
 
-#[derive(Queryable, Deserialize, Serialize)]
+#[derive(Queryable, Insertable, Deserialize, Serialize)]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -36,12 +38,28 @@ impl User {
         }
     }
     
-    pub fn generate_auth_token(&self, secret_key: String, expiresAt: usize) -> String {
+    pub fn generate_auth_token<'a>(&self, secret_key: String, expires_at: usize) -> String {
         let claims = Claims {
-            uid: &self.id,
-            exp: expiresAt,
+            uid: self.id,
+            exp: expires_at,
+        };
+        if let Ok(token) = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
+            token
+        } else {
+            panic!("generate auth token fail")
         }
-        encode(&Header::default(), &claims, &EncodingKey::from_secret(secret_key.as_ref()))
+    }
+
+    pub fn set_password(&mut self, password: String) {
+        if let Ok(password_hash) = hash(password, DEFAULT_COST) {
+            self.password_hash = password_hash;
+        }
+    }
+
+    pub fn insert(&self, conn: &PgConnection) -> Result<i32, diesel::result::Error> {
+        use crate::models::schema::users::dsl::*;
+        diesel::insert_into(users).values(self).execute(conn)?;
+        Ok(self.id)
     }
 }
 
