@@ -3,6 +3,7 @@ extern crate bcrypt;
 use actix_web::web;
 use bcrypt::{DEFAULT_COST, hash, verify, BcryptResult};
 use diesel::prelude::*;
+use jsonwebtoken::{encode, decode, Header, EncodingKey};
 use serde::{Deserialize, Serialize};
 
 use crate::interface;
@@ -18,6 +19,14 @@ pub struct User {
     pub role: i32,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    uid: i32,
+    exp: usize,
+    
+    
+}
+
 impl User {
     pub fn verify_password(&self, password: &String) -> bool {
         if let Ok(valid) = verify(&self.password_hash, password) {
@@ -25,6 +34,14 @@ impl User {
         } else {
             false
         }
+    }
+    
+    pub fn generate_auth_token(&self, secret_key: String, expiresAt: usize) -> String {
+        let claims = Claims {
+            uid: &self.id,
+            exp: expiresAt,
+        }
+        encode(&Header::default(), &claims, &EncodingKey::from_secret(secret_key.as_ref()))
     }
 }
 
