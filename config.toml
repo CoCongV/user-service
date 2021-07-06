@@ -1,1 +1,7 @@
+[adminuser]
+username = "admin"
+email = "admin@test.com"
+password = "password"
+
 [database]
+URL = "postgres://cong:password@localhost:5432/userservice"
