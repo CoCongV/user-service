@@ -2,13 +2,15 @@ extern crate bcrypt;
 
 use actix_web::web;
 use actix_web::error::{Error, ErrorUnauthorized, ErrorBadRequest};
-use bcrypt::{DEFAULT_COST, hash, verify};
+// use bcrypt::{DEFAULT_COST, hash, verify};
 use diesel::prelude::*;
 use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
+use crate::errors;
 use crate::interface;
 use crate::models::schema::users;
+use crate::utils::{hash_password, verify};
 
 #[derive(Queryable, Insertable, Deserialize, Serialize, Clone, Debug)]
 pub struct User {
@@ -33,15 +35,16 @@ pub struct NewUser {
 }
 
 impl NewUser {
-    pub fn new(name: String, email: String, avatar: String, verify: bool, password: String, role: i32) -> NewUser {
-        NewUser {
+    pub fn new(name: String, email: String, avatar: String, verify: bool, password: String, role: i32) -> Result<NewUser, errors::ServiceError>  {
+        let password_hash = hash_password(&password)?;
+        Ok(NewUser {
             name: name,
             email: email,
             avatar: avatar,
             verify: verify,
-            password_hash: hash_password(password),
+            password_hash: password_hash,
             role: role,
-        }
+        })
     }
 }
 
@@ -80,13 +83,13 @@ impl User {
 
 }
 
-pub fn hash_password(password: String) -> String {
-    if let Ok(password_hash) = hash(password, DEFAULT_COST) {
-        password_hash
-    } else {
-        panic!("Generate Password Fail")
-    }
-}
+// pub fn hash_password(password: String) -> String {
+//     if let Ok(password_hash) = hash(password, DEFAULT_COST) {
+//         password_hash
+//     } else {
+//         panic!("Generate Password Fail")
+//     }
+// }
 
 pub fn verify_auth_token<'a>(secret: String, conn: &PgConnection, token: String) -> Result<Option<User>, Error> {
     use crate::models::schema::users::dsl::*;
@@ -123,7 +126,7 @@ pub fn insert_new_user(
     useravatar: String,
     conn: &PgConnection
 ) -> Result<User, diesel::result::Error> {
-    let user = NewUser::new(username, useremail, useravatar, false, password, 1);
+    let user = NewUser::new(username, useremail, useravatar, false, password, 1).unwrap();
     let user = diesel::insert_into(users::table).values(&user).get_result(conn)?;
     Ok(user)
 }

@@ -12,8 +12,10 @@ use lazy_static::lazy_static;
 mod api;
 mod config;
 mod db;
+mod errors;
 mod interface;
 mod models;
+mod utils;
 
 use crate::config::Config;
 
