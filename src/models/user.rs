@@ -41,8 +41,9 @@ impl NewUser {
         verify: bool,
         password: String,
         role: i32,
+        salt: &[u8],
     ) -> Result<NewUser, errors::ServiceError> {
-        let password_hash = hash_password(&password)?;
+        let password_hash = hash_password(&password, salt)?;
         Ok(NewUser {
             name: name,
             email: email,
@@ -140,8 +141,9 @@ pub fn insert_new_user(
     password: String,
     useravatar: String,
     conn: &PgConnection,
+    salt: &[u8],
 ) -> Result<User, diesel::result::Error> {
-    let user = NewUser::new(username, useremail, useravatar, false, password, 1).unwrap();
+    let user = NewUser::new(username, useremail, useravatar, false, password, 1, salt).unwrap();
     let user = diesel::insert_into(users::table)
         .values(&user)
         .get_result(conn)?;
