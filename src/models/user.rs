@@ -56,7 +56,7 @@ struct Claims {
 
 impl User {
     pub fn verify_password(&self, password: &String) -> bool {
-        if let Ok(valid) = verify(password, &self.password_hash) {
+        if let Ok(valid) = verify(&self.password_hash, password) {
             valid
         } else {
             false
