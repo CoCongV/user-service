@@ -5,4 +5,5 @@ default_avatar = "http://example.com/default_avatar.jpg"
 addr = "0.0.0.0:8001"
 db_url = "postgres://cong:password@localhost:5432/userservice"
 secret_key = "c214c074-a76b-4b98-97d4-e91cc0674d58"
+salt = "password"
 expire_at = 43200

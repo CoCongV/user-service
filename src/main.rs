@@ -19,6 +19,7 @@ use crate::config::Config;
 
 lazy_static! {
     static ref CONF: Config = config::read_config();
+    // static ref SALT: &'static [u8] = CONF.salt;
 }
 
 #[actix_web::main]

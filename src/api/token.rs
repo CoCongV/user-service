@@ -18,7 +18,7 @@ pub async fn generate_auth_token(
     info: web::Json<interface::Info>,
 ) -> Result<HttpResponse, Error> {
     let conn = pool.get().expect("couldn't get db connection from pool");
-    let info = Arc::new(info);
+    let info = Arc::new(info.into_inner());
 
     let info_clone = Arc::clone(&info);
     let user = web::block(move || models::user::query_user(&info_clone, &conn))
@@ -27,14 +27,12 @@ pub async fn generate_auth_token(
             eprintln!("{}", e);
             HttpResponse::InternalServerError().finish()
         })?;
-
     if let Some(user) = user {
         if user.verify_password(&info.password) {
-            let token = user.generate_auth_token(&CONF.secret_key, &CONF.expire_at);
+            // let token = user.generate_auth_token(&CONF.secret_key, &CONF.expire_at);
             Ok(HttpResponse::Ok().json(interface::Token{
-                token
+                token: String::from("test")
             }))
-            // Ok(HttpResponse::Ok().json(user))
         } else {
             let res = HttpResponse::Unauthorized().body(format!("password Error"));
             Ok(res)

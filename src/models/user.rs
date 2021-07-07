@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::interface;
 use crate::models::schema::users;
 
-#[derive(Queryable, Insertable, Deserialize, Serialize, Clone)]
+#[derive(Queryable, Insertable, Deserialize, Serialize, Clone, Debug)]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -103,7 +103,7 @@ pub fn verify_auth_token<'a>(secret: String, conn: &PgConnection, token: String)
 }
 
 pub fn query_user(
-    userinfo: &web::Json<interface::Info>,
+    userinfo: &interface::Info,
     conn: &PgConnection,
 ) -> Result<Option<User>, diesel::result::Error> {
     use crate::models::schema::users::dsl::*;
