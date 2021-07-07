@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use actix_web::{post, get, web, Error, HttpResponse};
+use actix_web::{get, web, Error, HttpResponse};
 
 use crate::db;
 use crate::interface;
@@ -27,8 +27,8 @@ pub async fn generate_auth_token(
             HttpResponse::InternalServerError().finish()
         })?;
 
-    if let Some(user) = user {
-        if user.verify_password(&info.password) {
+        if let Some(user) = user {
+            if user.verify_password(&info.password) {
             Ok(HttpResponse::Ok().json(user))
         } else {
             let res = HttpResponse::Unauthorized().body(format!("password Error"));

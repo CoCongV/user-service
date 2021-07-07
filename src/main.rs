@@ -2,34 +2,47 @@
 extern crate diesel;
 extern crate clap;
 extern crate dotenv;
+extern crate lazy_static;
 
 use actix_web::{middleware, App, HttpServer};
 use clap::SubCommand;
+use diesel::PgConnection;
+use lazy_static::lazy_static;
 
 mod api;
+mod config;
 mod db;
 mod interface;
 mod models;
 
+use crate::config::Config;
+
+lazy_static! {
+    static ref CONF: Config = config::read_config();
+}
+
 #[actix_web::main]
 async fn runserver() -> std::io::Result<()> {
-    let pool = db::create_db_pool("postgres://cong:password@localhost:5432/userservice");
+    let pool = db::create_db_pool(&CONF.db_url);
     HttpServer::new(move || {
         App::new()
             .data(pool.clone())
             .wrap(middleware::Logger::default())
             .service(api::token::generate_auth_token)
     })
-    .bind("0.0.0.0:8001")?
+    .bind(&CONF.addr)?
     .run()
     .await
 }
 
-fn init() -> std::io::Result<()> {
+fn init(conn: &PgConnection) -> std::io::Result<()> {
+    let _conf = CONF.clone();
+    models::user::insert_new_user(_conf.admin_user, _conf.admin_email, _conf.admin_password, _conf.default_avatar, conn).unwrap();
     Ok(())
 }
 
 fn main() {
+    let pool = db::create_db_pool(&CONF.db_url);
     let matches = clap::App::new("User Service")
         .subcommand(SubCommand::with_name("runserver").about("run server"))
         .subcommand(SubCommand::with_name("init").about("init database and create admin uesr"))
@@ -39,8 +52,10 @@ fn main() {
             if let Ok(_) = runserver() {
             }
         }
+
         if let Some(_) = matches.subcommand_matches("init") {
-            if let Ok(_) = init() {
+            let conn = pool.get().expect("get diesel connection fail!");
+            if let Ok(_) = init(&conn) {
                 println!("init success!")
             }
         }

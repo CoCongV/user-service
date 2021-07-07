@@ -1,7 +1,6 @@
-[adminuser]
-username = "admin"
-email = "admin@test.com"
-password = "password"
-
-[database]
-URL = "postgres://cong:password@localhost:5432/userservice"
+admin_user = "admin"
+admin_email = "admin@test.com"
+admin_password = "password"
+default_avatar = "http://example.com/default_avatar.jpg"
+addr = "0.0.0.0:8001"
+db_url = "postgres://cong:password@localhost:5432/userservice"
