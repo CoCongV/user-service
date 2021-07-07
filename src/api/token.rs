@@ -29,9 +29,9 @@ pub async fn generate_auth_token(
         })?;
     if let Some(user) = user {
         if user.verify_password(&info.password) {
-            // let token = user.generate_auth_token(&CONF.secret_key, &CONF.expire_at);
+            let token = user.generate_auth_token(&CONF.secret_key, &CONF.expire_at);
             Ok(HttpResponse::Ok().json(interface::Token{
-                token: String::from("test")
+                token
             }))
         } else {
             let res = HttpResponse::Unauthorized().body(format!("password Error"));

@@ -21,7 +21,7 @@ use crate::config::Config;
 
 lazy_static! {
     static ref CONF: Config = config::read_config();
-    // static ref SALT: &'static [u8] = CONF.salt;
+    static ref SALT: &'static [u8] = CONF.salt.as_bytes();
 }
 
 #[actix_web::main]

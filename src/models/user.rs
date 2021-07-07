@@ -1,6 +1,5 @@
 extern crate bcrypt;
 
-use actix_web::web;
 use actix_web::error::{Error, ErrorUnauthorized, ErrorBadRequest};
 // use bcrypt::{DEFAULT_COST, hash, verify};
 use diesel::prelude::*;

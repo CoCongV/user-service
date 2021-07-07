@@ -1,13 +1,11 @@
 use crate::errors::ServiceError;
 use argon2::{self, Config};
 
-use crate::CONF;
-
-const SALT: &'static [u8] = b"supersecuresalt";
+use crate::SALT;
 
 pub fn hash_password(password: &str) -> Result<String, ServiceError> {
     let config = Config::default();
-    argon2::hash_encoded(password.as_bytes(), SALT, &config).map_err(|err| {
+    argon2::hash_encoded(password.as_bytes(), &SALT, &config).map_err(|err| {
         dbg!(err);
         ServiceError::InternalServerError
     })
