@@ -4,8 +4,6 @@ extern crate clap;
 extern crate dotenv;
 extern crate lazy_static;
 
-use std::io;
-
 use actix_web::{middleware, App, HttpServer};
 use clap::SubCommand;
 use diesel::PgConnection;

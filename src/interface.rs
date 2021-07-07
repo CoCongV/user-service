@@ -5,3 +5,8 @@ pub struct Info {
     pub username: String,
     pub password: String,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct Token {
+    pub token: String,
+}

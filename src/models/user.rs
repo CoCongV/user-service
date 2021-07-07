@@ -60,10 +60,10 @@ impl User {
         }
     }
     
-    pub fn generate_auth_token<'a>(&self, secret_key: String, expires_at: usize) -> String {
+    pub fn generate_auth_token<'a>(&self, secret_key: &str, expires_at: &usize) -> String {
         let claims = Claims {
             uid: self.id,
-            exp: expires_at,
+            exp: *expires_at,
         };
         if let Ok(token) = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret_key.as_ref())) {
             token

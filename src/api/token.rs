@@ -5,6 +5,7 @@ use actix_web::{get, web, Error, HttpResponse};
 use crate::db;
 use crate::interface;
 use crate::models;
+use crate::CONF;
 
 // #[get("/api/v1/verify_auth_token")]
 // pub async fn verify_password() -> Result<HttpResponse, Error> {
@@ -27,9 +28,13 @@ pub async fn generate_auth_token(
             HttpResponse::InternalServerError().finish()
         })?;
 
-        if let Some(user) = user {
-            if user.verify_password(&info.password) {
-            Ok(HttpResponse::Ok().json(user))
+    if let Some(user) = user {
+        if user.verify_password(&info.password) {
+            let token = user.generate_auth_token(&CONF.secret_key, &CONF.expire_at);
+            Ok(HttpResponse::Ok().json(interface::Token{
+                token
+            }))
+            // Ok(HttpResponse::Ok().json(user))
         } else {
             let res = HttpResponse::Unauthorized().body(format!("password Error"));
             Ok(res)

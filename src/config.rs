@@ -12,6 +12,8 @@ pub struct Config {
     pub admin_password: String,
     pub admin_email: String,
     pub default_avatar: String,
+    pub secret_key: String,
+    pub expire_at: usize,
 }
 
 pub fn read_config() -> Config {
