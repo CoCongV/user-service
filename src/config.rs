@@ -13,7 +13,7 @@ pub struct Config {
     pub admin_email: String,
     pub default_avatar: String,
     pub secret_key: String,
-    pub expire_at: usize,
+    pub expires_at: usize,
     pub salt: String,
 }
 

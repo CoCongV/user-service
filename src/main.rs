@@ -26,6 +26,8 @@ lazy_static! {
 
 #[actix_web::main]
 async fn runserver() -> std::io::Result<()> {
+    // std::env::set_var("RUST_LOG", "actix_web=info,actix_server=info");
+    // env_logger::init();
     let pool = db::create_db_pool(&CONF.db_url);
     HttpServer::new(move || {
         App::new()
