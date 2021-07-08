@@ -29,7 +29,7 @@ pub async fn generate_auth_token(
     .await
     .map_err(|e| {
         eprintln!("{}", e);
-        HttpResponse::InternalServerError().finish()
+        HttpResponse::Unauthorized().finish()
     })?;
 
     Ok(HttpResponse::Ok().json(interface::Token{

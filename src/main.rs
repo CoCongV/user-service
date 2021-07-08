@@ -24,8 +24,8 @@ static SALT: Lazy<&'static [u8]> = Lazy::new(|| CONF.salt.as_bytes());
 
 #[actix_web::main]
 async fn runserver() -> std::io::Result<()> {
-    // std::env::set_var("RUST_LOG", "actix_web=info,actix_server=info");
-    // env_logger::init();
+    std::env::set_var("RUST_LOG", "actix_web=info,actix_server=info");
+    env_logger::init();
     let pool = db::create_db_pool(&CONF.db_url);
     HttpServer::new(move || {
         App::new()
@@ -73,15 +73,12 @@ mod tests {
     use super::*;
     use actix_rt;
     use actix_web::{http, test, web};
-    use lazy_static::lazy_static;
 
     use crate::api::token::generate_auth_token;
     use crate::interface::Info;
 
-    lazy_static! {
-        static ref POOL: db::Pool = db::create_db_pool(&CONF.db_url);
-    }
-    
+    static POOL: Lazy<db::Pool> = Lazy::new(|| db::create_db_pool(&CONF.db_url));
+
     #[actix_rt::test]
     async fn test_get_token_ok() {
         let mut app =
@@ -99,8 +96,16 @@ mod tests {
 
     #[actix_rt::test]
     async fn get_token_not_ok() {
-        let req = test::TestRequest::default().to_http_request();
-        // let resp = generate_auth_token(req).await;
-        // assert_eq!(resp.status(), http::StatusCode::BAD_REQUEST);
+        let mut app =
+            test::init_service(App::new().data(POOL.clone()).service(generate_auth_token)).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/token")
+            .set_json(&Info {
+                username: "admin".to_owned(),
+                password: "admin".to_owned(),
+            })
+            .to_request();
+        let resp = test::call_service(&mut app, req).await;
+        assert_eq!(resp.status(), 401);
     }
 }

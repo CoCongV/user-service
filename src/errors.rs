@@ -1,4 +1,4 @@
-use actix_web::{error::ResponseError, HttpResponse};
+use actix_web::{error::ResponseError, HttpResponse, http::StatusCode};
 use derive_more::Display;
 use diesel::result::{DatabaseErrorKind, Error as DBError};
 use std::convert::From;
@@ -34,6 +34,16 @@ impl ResponseError for ServiceError {
             ServiceError::NotFound(ref message) => {
                 HttpResponse::NotFound().json(message)
             }
+        }
+    }
+
+
+    fn status_code(&self) -> StatusCode {
+        match *self {
+            ServiceError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+            ServiceError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            ServiceError::Unauthorized => StatusCode::UNAUTHORIZED,
+            ServiceError::NotFound(_) => StatusCode::NOT_FOUND,
         }
     }
 }
