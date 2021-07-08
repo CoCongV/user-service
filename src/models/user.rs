@@ -91,14 +91,6 @@ impl User {
     }
 }
 
-// pub fn hash_password(password: String) -> String {
-//     if let Ok(password_hash) = hash(password, DEFAULT_COST) {
-//         password_hash
-//     } else {
-//         panic!("Generate Password Fail")
-//     }
-// }
-
 pub fn verify_auth_token<'a>(
     secret: String,
     conn: &PgConnection,
