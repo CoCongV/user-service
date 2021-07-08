@@ -2072,6 +2072,7 @@ dependencies = [
  "env_logger",
  "jsonwebtoken",
  "lazy_static",
+ "once_cell",
  "r2d2",
  "rust-argon2",
  "serde",

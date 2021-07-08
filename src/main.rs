@@ -7,7 +7,7 @@ extern crate lazy_static;
 use actix_web::{middleware, App, HttpServer};
 use clap::SubCommand;
 use diesel::PgConnection;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 
 mod api;
 mod config;
@@ -19,10 +19,8 @@ mod utils;
 
 use crate::config::Config;
 
-lazy_static! {
-    static ref CONF: Config = config::read_config();
-    static ref SALT: &'static [u8] = CONF.salt.as_bytes();
-}
+static CONF: Lazy<Config> = Lazy::new(|| config::read_config());
+static SALT: Lazy<&'static [u8]> = Lazy::new(|| CONF.salt.as_bytes());
 
 #[actix_web::main]
 async fn runserver() -> std::io::Result<()> {
@@ -75,6 +73,7 @@ mod tests {
     use super::*;
     use actix_rt;
     use actix_web::{http, test, web};
+    use lazy_static::lazy_static;
 
     use crate::api::token::generate_auth_token;
     use crate::interface::Info;
