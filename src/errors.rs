@@ -14,6 +14,9 @@ pub enum ServiceError {
 
     #[display(fmt = "Unauthorized")]
     Unauthorized,
+
+    #[display(fmt = "NotFound: {}", _0)]
+    NotFound(String),
 }
 
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
@@ -27,6 +30,9 @@ impl ResponseError for ServiceError {
             }
             ServiceError::Unauthorized => {
                 HttpResponse::Unauthorized().json("Unauthorized")
+            }
+            ServiceError::NotFound(ref message) => {
+                HttpResponse::NotFound().json(message)
             }
         }
     }
