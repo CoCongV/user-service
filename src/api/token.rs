@@ -6,10 +6,12 @@ use crate::interface;
 use crate::models;
 use crate::CONF;
 
-// #[get("/api/v1/verify_auth_token")]
-// pub async fn verify_password() -> Result<HttpResponse, Error> {
-
-// }
+#[get("/api/v1/verify_auth_token")]
+pub async fn verify_password(user: web::Data<models::user::User>) -> Result<HttpResponse, Error> {
+    Ok(HttpResponse::Ok().json(interface::VerifyOk{
+        uid: user.id,
+    }))
+}
 
 #[get("/api/v1/token")]
 pub async fn generate_auth_token(

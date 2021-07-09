@@ -10,3 +10,9 @@ pub struct Info {
 pub struct Token {
     pub token: String,
 }
+
+
+#[derive(Deserialize, Serialize)]
+pub struct VerifyOk{
+    pub uid: i32,
+}

@@ -31,7 +31,7 @@ async fn runserver() -> std::io::Result<()> {
         App::new()
             .data(pool.clone())
             .wrap(middleware::Logger::default())
-            .service(api::token::generate_auth_token)
+            .service(api::generate_routes())
     })
     .bind(&CONF.addr)?
     .run()
