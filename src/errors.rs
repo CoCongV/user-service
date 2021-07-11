@@ -1,75 +1,119 @@
-use actix_web::{error::ResponseError, HttpResponse, http::StatusCode};
-use derive_more::Display;
+use std::fmt;
+
 use diesel::result::{DatabaseErrorKind, Error as DBError};
-use std::convert::From;
-use uuid::Error as ParseError;
+use warp::reject::Reject;
 
-#[derive(Debug, Display)]
-pub enum ServiceError {
-    #[display(fmt = "Internal Server Error")]
-    InternalServerError,
-
-    #[display(fmt = "BadRequest: {}", _0)]
-    BadRequest(String),
-
-    #[display(fmt = "Unauthorized")]
+#[derive(Debug)]
+pub enum ErrorType {
+    NotFound,
+    Internal,
+    BadRequest,
     Unauthorized,
-
-    #[display(fmt = "NotFound: {}", _0)]
-    NotFound(String),
 }
 
-// impl ResponseError trait allows to convert our errors into http responses with appropriate data
-impl ResponseError for ServiceError {
-    fn error_response(&self) -> HttpResponse {
-        match self {
-            ServiceError::InternalServerError => HttpResponse::InternalServerError()
-                .json("Internal Server Error, Please try later"),
-            ServiceError::BadRequest(ref message) => {
-                HttpResponse::BadRequest().json(message)
-            }
-            ServiceError::Unauthorized => {
-                HttpResponse::Unauthorized().json("Unauthorized")
-            }
-            ServiceError::NotFound(ref message) => {
-                HttpResponse::NotFound().json(message)
-            }
+#[derive(Debug)]
+pub struct AppError {
+    pub err_type: ErrorType,
+    pub message: String,
+}
+
+impl AppError {
+    pub fn new(message: &str, err_type: ErrorType) -> AppError {
+        AppError {
+            message: message.to_string(),
+            err_type,
         }
     }
 
-
-    fn status_code(&self) -> StatusCode {
-        match *self {
-            ServiceError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
-            ServiceError::BadRequest(_) => StatusCode::BAD_REQUEST,
-            ServiceError::Unauthorized => StatusCode::UNAUTHORIZED,
-            ServiceError::NotFound(_) => StatusCode::NOT_FOUND,
+    pub fn to_http_status(&self) -> warp::http::StatusCode {
+        match self.err_type {
+            ErrorType::NotFound => warp::http::StatusCode::NOT_FOUND,
+            ErrorType::Internal => warp::http::StatusCode::INTERNAL_SERVER_ERROR,
+            ErrorType::BadRequest => warp::http::StatusCode::BAD_REQUEST,
+            ErrorType::Unauthorized => warp::http::StatusCode::UNAUTHORIZED,
         }
+    }
+
+    pub fn from_diesel_err(err: diesel::result::Error, context: &str) -> AppError {
+        AppError::new(
+            format!("{}: {}", context, err.to_string()).as_str(),
+            match err {
+                diesel::result::Error::DatabaseError(db_err, _) => match db_err {
+                    diesel::result::DatabaseErrorKind::UniqueViolation => ErrorType::BadRequest,
+                    _ => ErrorType::Internal,
+                },
+                diesel::result::Error::NotFound => ErrorType::NotFound,
+                // If needed we can handle other cases
+                _ => ErrorType::Internal,
+            },
+        )
     }
 }
 
-// we can return early in our handlers if UUID provided by the user is not valid
-// and provide a custom message
-impl From<ParseError> for ServiceError {
-    fn from(_: ParseError) -> ServiceError {
-        ServiceError::BadRequest("Invalid UUID".into())
+impl std::error::Error for AppError {}
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
     }
 }
 
-impl From<DBError> for ServiceError {
-    fn from(error: DBError) -> ServiceError {
-        // Right now we just care about UniqueViolation from diesel
-        // But this would be helpful to easily map errors as our app grows
-        match error {
-            DBError::DatabaseError(kind, info) => {
-                if let DatabaseErrorKind::UniqueViolation = kind {
-                    let message =
-                        info.details().unwrap_or_else(|| info.message()).to_string();
-                    return ServiceError::BadRequest(message);
-                }
-                ServiceError::InternalServerError
-            }
-            _ => ServiceError::InternalServerError,
-        }
+impl From<DBError> for AppError {
+    fn from(error: DBError) -> AppError {
+        AppError::new(
+            format!("{}", error.to_string()).as_str(),
+            match error {
+                diesel::result::Error::DatabaseError(db_err, _) => match db_err {
+                    DatabaseErrorKind::UniqueViolation => ErrorType::BadRequest,
+                    _ => ErrorType::Internal,
+                },
+                diesel::result::Error::NotFound => ErrorType::NotFound,
+                // If needed we can handle other cases
+                _ => ErrorType::Internal,
+            },
+        )
     }
+}
+
+impl Reject for AppError {}
+
+use serde::Serialize;
+use std::convert::Infallible;
+use warp::{Rejection, Reply};
+
+#[derive(Serialize)]
+struct ErrorMessage {
+    code: u16,
+    message: String,
+}
+
+pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
+    let code;
+    let message;
+
+    if err.is_not_found() {
+        code = warp::http::StatusCode::NOT_FOUND;
+        message = "Not Found";
+    } else if let Some(app_err) = err.find::<AppError>() {
+        code = app_err.to_http_status();
+        message = app_err.message.as_str();
+    } else if let Some(_) = err.find::<warp::filters::body::BodyDeserializeError>() {
+        code = warp::http::StatusCode::BAD_REQUEST;
+        message = "Invalid Body";
+    } else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
+        code = warp::http::StatusCode::METHOD_NOT_ALLOWED;
+        message = "Method Not Allowed";
+    } else {
+        // We should have expected this... Just log and say its a 500
+        eprintln!("unhandled rejection: {:?}", err);
+        code = warp::http::StatusCode::INTERNAL_SERVER_ERROR;
+        message = "Unhandled rejection";
+    }
+
+    let json = warp::reply::json(&ErrorMessage {
+        code: code.as_u16(),
+        message: message.into(),
+    });
+
+    Ok(warp::reply::with_status(json, code))
 }

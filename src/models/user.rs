@@ -1,12 +1,8 @@
-extern crate bcrypt;
-
-use actix_web::error::{Error, ErrorBadRequest, ErrorUnauthorized};
-// use bcrypt::{DEFAULT_COST, hash, verify};
 use diesel::prelude::*;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::errors;
+use crate::errors::{AppError, ErrorType};
 use crate::interface;
 use crate::models::schema::users;
 use crate::utils::{hash_password, verify};
@@ -41,7 +37,7 @@ impl NewUser {
         verify: bool,
         password: String,
         role: i32,
-    ) -> Result<NewUser, errors::ServiceError> {
+    ) -> Result<NewUser, AppError> {
         let password_hash = hash_password(&password)?;
         Ok(NewUser {
             name: name,
@@ -68,7 +64,8 @@ impl User {
             false
         }
     }
-    pub fn generate_auth_token<'a>(&self, secret_key: &str, expires_at: &usize) -> String {
+    
+    pub fn generate_auth_token<'a>(&self, secret_key: &str, expires_at: &usize) -> Result<String, AppError> {
         let claims = Claims {
             uid: self.id,
             exp: *expires_at,
@@ -78,9 +75,10 @@ impl User {
             &claims,
             &EncodingKey::from_secret(secret_key.as_ref()),
         ) {
-            token
+            Ok(token)
         } else {
-            panic!("generate auth token fail")
+            // panic!("generate auth token fail")
+            Err(AppError::new("generate auth token fail", ErrorType::Internal))
         }
     }
 
@@ -95,7 +93,7 @@ pub fn verify_auth_token<'a>(
     secret: String,
     conn: &PgConnection,
     token: String,
-) -> Result<Option<User>, Error> {
+) -> Result<Option<User>, AppError> {
     use crate::models::schema::users::dsl::*;
 
     if let Ok(token_data) = decode::<Claims>(
@@ -110,17 +108,14 @@ pub fn verify_auth_token<'a>(
         {
             Ok(user)
         } else {
-            Err(ErrorUnauthorized("Unauthorized"))
+            Err(AppError::new("Unauthorized", ErrorType::Unauthorized))
         }
     } else {
-        Err(ErrorBadRequest("token valid"))
+        Err(AppError::new("token valid", ErrorType::BadRequest))
     }
 }
 
-pub fn query_user(
-    userinfo: &interface::Info,
-    conn: &PgConnection,
-) -> Result<User, errors::ServiceError> {
+pub fn query_user(userinfo: &interface::Info, conn: &PgConnection) -> Result<User, AppError> {
     use crate::models::schema::users::dsl::*;
 
     let mut items = users
@@ -130,7 +125,7 @@ pub fn query_user(
     if let Some(user) = items.pop() {
         Ok(user)
     } else {
-        Err(errors::ServiceError::NotFound("User is not exists".into()))
+        Err(AppError::new("User is not exists", ErrorType::NotFound))
     }
 }
 

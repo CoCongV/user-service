@@ -1,7 +1,16 @@
 pub mod token;
 
-use actix_web::{web, Scope};
+use warp;
+use warp::Filter;
 
-pub fn generate_routes() -> Scope {
-    web::scope("/api/v1").service(token::generate_auth_token).service(token::verify_password)
+use crate::db::Pool;
+
+pub fn api_filters(
+    pool: Pool,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path!("api" / "v1" / ..)
+        .and(
+            token::generate_auth_token(pool.clone())
+                .or(token::ping())
+        )
 }

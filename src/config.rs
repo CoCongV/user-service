@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use toml;
 
 #[derive(Deserialize, Debug, Clone)]
